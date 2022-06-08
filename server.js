@@ -6,6 +6,7 @@ const express = require('express');
 const mongoose = require('mongoose')
 
 const { imageRouter } = require('./routes/imageRouter');
+const { userRouter } = require('./routes/userRouter');
 const app = express();
 
 const { MONGO_URI, PORT} = process.env
@@ -24,8 +25,13 @@ mongoose.connect(MONGO_URI,
       
   // 외부 입력(클라이언트)으로도 이미지가 보이게하기
   app.use("/uploads", express.static('uploads'));
+  // 서버에서 응답 받은 res를 보고 json형식으로 만들어 req.body에 저장해준다.
+  app.use(express.json());
+
   // /images 경로로 실행된 값들을 모두 imageRouter로 전송하라
   app.use("/images", imageRouter)
+  // /users 경로로 실행된 값들을 모두 userRouter로 전송하라
+  app.use("/users", userRouter)
 
   app.listen(PORT, () => console.log('Express server listening on PORT ' + PORT));
 })

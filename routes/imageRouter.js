@@ -4,7 +4,7 @@ const imageRouter = Router();
 // models 폴더에 image.js 파일 내부에 export한 mongoose.model("image", ImageSchema)가 저장됨
 // const Image = mongoose.model("image")
 // const Image = mongoose.model("image") === const Image = require('./models/image')
-const Image = require('../models/image');
+const Image = require('../models/Image');
 const { upload } = require('../middleware/imageUpload')
 
 
@@ -12,7 +12,7 @@ const { upload } = require('../middleware/imageUpload')
 // /upload url로 post가 왔을 때 함수를 실행함
 // upload.single('imageTest')는 함수 upload를 이용하여 해당 메소드인 single(사진을 한장만 보내겠다.)을 이용하고, 
 // 변수 명으로(post할 때 key 값으로 사용) imageTest를 사용하겠다.
-imageRouter.post('/images', upload.single('image'), async (req, res) => {
+imageRouter.post('/', upload.single('image'), async (req, res) => {
   // 모델에 대한 새로은 인스턴스를 만듬
   const image = await new Image({
     key : req.file.filename, originalFileName: req.file.originalname
@@ -21,7 +21,7 @@ imageRouter.post('/images', upload.single('image'), async (req, res) => {
   res.json(image);
 })
 // db에서 Image 모델안에 있는 모든 데이터를 불러옴
-imageRouter.get("/images", async (req, res) => {
+imageRouter.get("/", async (req, res) => {
   const images = await Image.find()
   res.json(images)
 })
