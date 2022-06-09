@@ -2,7 +2,9 @@ const { Router } = require('express');
 const userRouter = Router();
 const User = require('../models/User')
 // npm i bcryptjs ( 암호화 라이브러리 )
-const { hash } = require("bcryptjs")
+const { hash, compare } = require("bcryptjs")
+
+// 회원가입 api
 userRouter.post('/register', async (req, res) => {
   try{
     if(req.body.password.length < 6) 
@@ -22,6 +24,21 @@ userRouter.post('/register', async (req, res) => {
     res.status(400).json({  message: err.message })
   }
 
+})
+
+// 로그인 api
+userRouter.post("/login", async(req, res) => {
+  try{
+    // User Model에서 findOne 함수를 이용해서 username이 req.body.username인 값을 찾아라.
+    const user = await User.findOne({username: req.body.username})
+    
+    // compare()의 첫번째 인자로 입력한 패스워드, 두번째 인자로 user의 hash를  받는다.
+    const isValid = await compare(req.body.password, user.hashedPassword)
+    if(!isValid) throw new Error("입력하신 정보가 올바리지 않습니다.")
+    res.json({message:"user validated"})
+  }catch(err){
+    res.status(400).json({ message: err.message})
+  }
 })
 
 module.exports = { userRouter };
