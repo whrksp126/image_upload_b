@@ -14,12 +14,20 @@ userRouter.post('/register', async (req, res) => {
     // hash 함수를 이용해서 req.body.password를 암호화 해준다. 다음 인자(10)는 암호화 등급으로 숫자가 높을 수록 높은 보안이다(단 높으면 느려짐). 
     const hashedPassword = await hash(req.body.password, 10)
     
-    await new User({
+    const user = await new User({
       name: req.body.name,
       username: req.body.username,
-      hashedPassword
+      hashedPassword,
+      sessions:[{
+        createdAt: new Date()
+      }]
     }).save()
-    res.json({  message: "user registered" })
+    const session = user.sessions[0]
+    res.json({  
+      message: "user registered",
+      sessionId: session._id,
+      name: user.name
+    })
   }catch(err){
     res.status(400).json({  message: err.message })
   }
@@ -35,7 +43,17 @@ userRouter.post("/login", async(req, res) => {
     // compare()의 첫번째 인자로 입력한 패스워드, 두번째 인자로 user의 hash를  받는다.
     const isValid = await compare(req.body.password, user.hashedPassword)
     if(!isValid) throw new Error("입력하신 정보가 올바리지 않습니다.")
-    res.json({message:"user validated"})
+    // 위의 if문에 걸리지 않으면 로그인이 성공한 것으로 바로 세션을 생성한다.
+    user.sessions.push({ createdAt: new Date() });
+    // user.sessions의 내부 배열에서 제일 끝(가장 최신 sesstion)이 선택됨
+    const sesstion = user.sessions[user.sessions.length-1];
+    await user.save();
+    res.json({
+      message: "user validated", 
+      sesstionId: sesstion._id,
+      name: user.name,
+    })
+
   }catch(err){
     res.status(400).json({ message: err.message})
   }
