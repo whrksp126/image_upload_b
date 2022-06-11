@@ -64,20 +64,17 @@ userRouter.patch("/login", async(req, res) => {
 // 로그아웃 api
 userRouter.patch("/logout", async(req, res) =>{
   try{
-    const {sessionid} = req.headers;
-    // mongoose라이브러리의 isValidObjectId 함수를 이용하면 세션 id가 올바른지 아닌지 확인하고 boolean 값을 리턴한다.
-    if(!mongoose.isValidObjectId(sessionid))
-      throw new Error("invalid sessionid")
-    const user = await User.findOne({"sessions._id" : sessionid})
-    if(!user) throw new Error("invalid sessionid")
+    console.log(req.user)
+    // 미들웨어를 이용해서 user정보를 req.user로 받아온다.
+    if(!req.user) throw new Error("invalid sessionid")
 
     // updateOne함수를 이용해서 유저에 저장된 session을 제거 후 저장한다.
     await User.updateOne(
       // 첫번째 인자는 해당 유저를 찾기위한 정보
-      { _id: user.id }, 
+      { _id: req.user.id }, 
       // 두번째 인자는 업데이트 할 것, 배열을 수정할 때는 pull을 사용한다.
       // pull을 하면 해당 조건에 맞는 값을 제거 시켜줌
-      { $pull: {sessions:{_id:sessionid}}}
+      { $pull: {sessions:{_id:req.headers.sessionid}}}
     )
     res.json({ message: "user is logged out."})
   }catch(err){
