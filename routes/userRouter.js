@@ -3,6 +3,7 @@ const userRouter = Router();
 const User = require('../models/User')
 // npm i bcryptjs ( 암호화 라이브러리 )
 const { hash, compare } = require("bcryptjs")
+const mongoose = require('mongoose')
 
 // 회원가입 api
 userRouter.post('/register', async (req, res) => {
@@ -35,7 +36,8 @@ userRouter.post('/register', async (req, res) => {
 })
 
 // 로그인 api
-userRouter.post("/login", async(req, res) => {
+// post는 유저 리소스를 생성할 때 사용한다.
+userRouter.patch("/login", async(req, res) => {
   try{
     // User Model에서 findOne 함수를 이용해서 username이 req.body.username인 값을 찾아라.
     const user = await User.findOne({username: req.body.username})
@@ -56,6 +58,30 @@ userRouter.post("/login", async(req, res) => {
 
   }catch(err){
     res.status(400).json({ message: err.message})
+  }
+})
+
+// 로그아웃 api
+userRouter.patch("/logout", async(req, res) =>{
+  try{
+    const {sessionid} = req.headers;
+    // mongoose라이브러리의 isValidObjectId 함수를 이용하면 세션 id가 올바른지 아닌지 확인하고 boolean 값을 리턴한다.
+    if(!mongoose.isValidObjectId(sessionid))
+      throw new Error("invalid sessionid")
+    const user = await User.findOne({"sessions._id" : sessionid})
+    if(!user) throw new Error("invalid sessionid")
+
+    // updateOne함수를 이용해서 유저에 저장된 session을 제거 후 저장한다.
+    await User.updateOne(
+      // 첫번째 인자는 해당 유저를 찾기위한 정보
+      { _id: user.id }, 
+      // 두번째 인자는 업데이트 할 것, 배열을 수정할 때는 pull을 사용한다.
+      // pull을 하면 해당 조건에 맞는 값을 제거 시켜줌
+      { $pull: {sessions:{_id:sessionid}}}
+    )
+    res.json({ message: "user is logged out."})
+  }catch(err){
+    res.status(404).json({ message: err.message})
   }
 })
 
